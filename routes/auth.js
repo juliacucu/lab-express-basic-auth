@@ -4,12 +4,15 @@ const router = express.Router();
 const bcryptjs = require("bcryptjs");
 const saltRounds = 10;
 
+// require (import) middleware functions
+const { isLoggedIn, isLoggedOut } = require("../middleware/route-guard.js");
+
 //Sing up
 router.get("/auth/sign-up", (req, res, next) => {
   res.render("auth/sign-up.hbs");
 });
 
-router.post("/auth/sign-up", (req, res, next) => {
+router.post("/auth/sign-up", isLoggedOut, (req, res, next) => {
   const { username, email, password } = req.body;
 
   bcryptjs
@@ -31,7 +34,7 @@ router.get("/auth/log-in", (req, res, next) => {
   res.render("auth/log-in.hbs");
 });
 
-router.post("/auth/log-in", (req, res, next) => {
+router.post("/auth/log-in", isLoggedOut, (req, res, next) => {
   const { email, password } = req.body;
  
   if (email === "" || password === "") {
@@ -56,5 +59,15 @@ router.post("/auth/log-in", (req, res, next) => {
     })
     .catch((error) => next(error));
 });
+
+router.get("user/user-profile", isLoggedIn, (req, res) => {
+    res.render("users/user-profile", { userInSession: req.session.currentUser });
+  });
+  
+  //                     .: ADDED :.
+  router.post("/log-out", isLoggedIn, (req, res) => {
+    req.session.destroy();
+    res.redirect("/");
+  });
 
 module.exports = router;
